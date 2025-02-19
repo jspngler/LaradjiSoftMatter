@@ -41,6 +41,13 @@ Compiling MDcuda.cu on University of Memphis cluster (this one only implements t
 The MDcuda executable can be used in place of the MD executable (with no other modifications).
 	
 
+# Recent addition:
+deltaLT parameter. By adding the following to your mpd file:
+```
+deltaLT [deltaL] [endL] [dimension] [relaxStep]
+```
+your system will perform linear steps of deltaL (float, rmin units) to the size endL (float, rmin units) along a dimension (integers where 0=x, 1=y, and 2=z) with relaxStep (integer number of deltaT steps) intervals in between.
+
 # Top (./) directory:
 ## ./MD.cpp: 
 The simulation solver. Runs with openmp or single threaded. Makefile contains build options for the intel (icc) compiler version. Using this is easy if you generate an mpd file in a directory (like test):

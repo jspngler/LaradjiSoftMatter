@@ -584,7 +584,26 @@ int main(int argc, char* argv[])
 				
 			current=time(NULL);
 		}
-		//short section to resize system, note that it only works when deltaLXY is something other than 0, it flags execution.
+		
+		//short section to resize a dimension of the system over time
+		if(System.readDeltaLT().ready(i))
+		{
+			threeVector<double> size=System.readDeltaLT().newSize(System.readSize());
+			threeVector<double> scaleFactor=System.readDeltaLT().scaleFactor(System.readSize());
+			
+			for(int k=0;k<System.readNParticles();k++)
+			{
+				p[k].x*=scaleFactor.x;
+				p[k].y*=scaleFactor.y;
+				p[k].z*=scaleFactor.z;
+			}
+			pairInteractions.resize(size);
+			integrate.resize(size);
+			System.setSize(size);
+		}
+		
+		//short section to resize system to minimize tension, note that it only works when 
+		//deltaLXY is something other than 0, it flags execution.
 		//This needs to be put in it's own object.
 		if(i%resizeRate==0 && i!=0 && System.readDeltaLXY()!=0)
 		{

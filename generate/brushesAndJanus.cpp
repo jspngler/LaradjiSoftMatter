@@ -6,9 +6,9 @@
 
 int main(int argc, char **argv)
 {
-	if(argc!=14)
+	if(argc!=15)
 	{
-		//14, brush + NP
+		//15, brush + NP
 		std::cout << "Usage: " << argv[0] << " name seed nBrushes arealDensity UminBrushNP nTessellations ratio nNanoparticles nanoRadius UminBrushBrush UmaxBrushBrush nMonomers bondLength temp" << std::endl;
 		return 0;
 	}

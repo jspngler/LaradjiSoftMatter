@@ -2,6 +2,7 @@
 //#include "lipids/lipids.h"
 #include "fileFormats/scriptFormat.h"
 #include "../analysis/cellInclude/cell.h"
+#include "algorithms/deltaLT.h"
 #include <array>
 /**
  * \brief Molecular dynamics system blob.
@@ -119,7 +120,9 @@ class Blob {
 		T * getGammaType();
 		///Read constant tension parameter.
 		T readTension();
-		
+		///Read length change over time
+		mpd::deltaLT<T> readDeltaLT();
+
 		///Set or change gamma.
 		void setGamma(T value);
 		///Set or change the initial temperature, in reduced units.
@@ -158,6 +161,8 @@ class Blob {
 		void setGammaType(int type, T value);
 		///Set constant tension parameter
 		void setTension(T value);
+		///Set change length over time parameter
+		void setDeltaLT(mpd::deltaLT<T> value);
 		
 		//Functions for the simulation
 		///Non-bonded force function between particles i and j. Utilizing the minimum image for boundaries.
@@ -281,6 +286,7 @@ class Blob {
 		twoVector<T> solventGamma;
 		std::vector<T> gammaType;
 		T tension;
+		mpd::deltaLT<T> deltaLT;
 		
 		T cutoffSquared;
 		
@@ -298,6 +304,7 @@ class Blob {
 			,SOLVENTGAMMA
 			,GAMMATYPE
 			,TENSION
+			,DELTALT
 			,NENUMCOMMANDID
 		};
 		
@@ -391,6 +398,7 @@ Blob<T>::Blob()
 	commands[SOLVENTGAMMA]="solventGamma";
 	commands[GAMMATYPE]="gammaType";
 	commands[TENSION]="tension";
+	commands[DELTALT]="deltaLT";
 	
 	//map the commands to their indexes to make them easy to find
 	for(int i=0;i<commands.size();i++)
@@ -419,6 +427,7 @@ Blob<T>::Blob()
 	commandRequired[GAMMATYPE]=false;
 	commandRequired[GAMMA]=false;
 	commandRequired[TENSION]=false;
+	commandRequired[DELTALT]=false;
 }
 
 //Mostly memory handling, deletes etc...
@@ -1302,9 +1311,25 @@ bool Blob<T>::input(std::string in)
 				wP=-1;
 			}
 			break;
-		
+		case DELTALT://changes axis length over time
+			if(it>0)
+			{
+				std::cout << it << std::endl;
+				deltaLT.inStep(reformatString,it-1);
+				if(reformatString.fail())
+				{
+					std::cerr << "Value after deltaLT is not a numerical type!\n";
+					std::cerr << "Format:\ndeltaLT [float] [float] [int] [int]\n";
+					throw 0;
+				}
+				if(it==deltaLT.nWords())
+				{
+					commandPresent[wP]=true;
+					wP=-1;
+				}
+			}
+			break;
 		default://other commands
-			std::cerr << "This command doesn't yet exist in the input() handler.\n";
 			throw 0;
 			//break;
 	}
@@ -1734,6 +1759,16 @@ std::string Blob<T>::output()
 			out << std::setprecision(15) << tension;
 			wP++;
 			it=0;
+			break;
+			
+			case DELTALT://changes axis length over time
+			deltaLT.outStep(out,it-1);
+			it++;
+			if(it==deltaLT.nWords()+1)
+			{
+				wP++;
+				it=0;
+			}
 			break;
 			
 			default://other commands
@@ -4388,6 +4423,12 @@ T Blob<T>::readTension()
 }
 
 template <typename T>
+mpd::deltaLT<T> Blob<T>::readDeltaLT()
+{
+	return deltaLT;
+}
+
+template <typename T>
 void Blob<T>::setGamma(T value)
 {
 	gamma=value;
@@ -4543,4 +4584,12 @@ void Blob<T>::setTension(T value)
 		commandPresent[TENSION]=false;
 	else
 		commandPresent[TENSION]=true;
+}
+
+template <typename T>
+void Blob<T>::setDeltaLT(mpd::deltaLT<T> value)
+{
+	deltaLT=value;
+	commandPresent[DELTALT]=deltaLT.active();
+
 }

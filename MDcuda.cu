@@ -418,6 +418,19 @@ int main(int argc, char* argv[])
 				
 			current=time(NULL);
 		}
+		
+		//short section to resize a dimension of the system over time
+		if(System.readDeltaLT().ready(i))
+		{
+			threeVector<double> newSize=System.readDeltaLT().newSize(System.readSize());
+			threeVector<double> scaleFactor=System.readDeltaLT().scaleFactor(System.readSize());
+			
+			mpd::rescale_device(state.deviceState(),scaleFactor);
+			state.resize(newSize);
+			//this could be deleted if the above is universal
+			cData.resize(newSize,System.readDeltaLXY());
+			System.setSize(newSize);
+		}
 		//short section to resize system, note that it only works when deltaLXY 
 		// is something other than 0, it flags execution.
 		if(i%resizeRate==0 && i!=0 && System.readDeltaLXY()!=0)
